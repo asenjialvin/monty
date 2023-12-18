@@ -1,44 +1,38 @@
 #include "monty.h"
-
 /**
- * f_push - pushes an element to the stack
- * @stack: pointer to the stack
- * @line_number: line number
+ * is_numeric - Checks if a string represents a numeric value.
+ * @str: The string to check.
+ * Return: 1 if numeric, 0 otherwise.
  */
-void f_push(stack_t **stack, unsigned int line_number)
+int is_numeric(const char *str)
 {
-	char *str = NULL;
-	stack_t *new;
-	int n;
+	int j = 0;
 
-	if (str == NULL)
+	if (!str)
+		return (0);
+	if (str[0] == '-')
+		j++;
+	for (; str[j] != '\0'; j++)
+	{
+		if (str[j] < '0' || str[j] > '9')
+			return (0);
+	}
+	return (1);
+}
+/**
+ * f_push - add node to the stack
+ * @head: stack head
+ * @line_number: line_number
+ * Return: no return
+ */
+void f_push(stack_t **head, unsigned int line_number)
+{
+	char *string = NULL;
+
+	if (!string || !is_numeric(string))
 	{
 		fprintf(stderr, "L%d: usage: push integer\n", line_number);
+		free_stack(head);
 		exit(EXIT_FAILURE);
 	}
-
-	n = atoi(str);
-
-	if (n == 0 && str[0] != '0')
-	{
-		fprintf(stderr, "L<line_number>: usage: push integer\n");
-		exit(EXIT_FAILURE);
-	}
-
-	new = malloc(sizeof(stack_t));
-	if (new == NULL)
-	{
-		fprintf(stderr, "Error: malloc failed\n");
-		exit(EXIT_FAILURE);
-	}
-
-	new->n = n;
-	new->prev = NULL;
-	new->next = *stack;
-
-	if (*stack != NULL)
-	{
-		(*stack)->prev = new;
-	}
-	*stack = new;
 }
