@@ -1,90 +1,45 @@
 #include "monty.h"
-#include <stdio.h>
-
-#define _POSIX_C_SOURCE 200809L
-
-void process_line(stack_t **stack, const char *line, instruction_t instructions[]);
-void free_stack(stack_t **stack);
-
+bus_t bus = {NULL, NULL, NULL, 0};
+/**
+* main - monty code interpreter
+* @argc: number of arguments
+* @argv: monty file location
+* Return: 0 on success
+*/
 int main(int argc, char *argv[])
 {
-	instruction_t instructions[] = {
-		{"push", f_push},
-		{"pall", f_pall},
-		{"pint", f_pint},
-		{"swap", f_swap},
-		{"add", f_add},
-		{"pop", f_pop},
-		{"nop", f_nop},
-		{NULL, NULL}
-	};
-	char *line = NULL;
-	size_t len = 0;
-	ssize_t nread;
+	char *content;
 	FILE *file;
+	size_t size = 0;
+	ssize_t read_line = 1;
 	stack_t *stack = NULL;
-	unsigned int line_number = 0;
+	unsigned int counter = 0;
 
 	if (argc != 2)
 	{
-		fprintf(stderr, "L<line_number>: usage: push integer\n");
-		exit (EXIT_FAILURE);
+		fprintf(stderr, "USAGE: monty file\n");
+		exit(EXIT_FAILURE);
 	}
 	file = fopen(argv[1], "r");
-	if (file == NULL)
+	bus.file = file;
+	if (!file)
 	{
-	perror("Error opening file");
-	exit(EXIT_FAILURE);
+		fprintf(stderr, "Error: Can't open file %s\n", argv[1]);
+		exit(EXIT_FAILURE);
 	}
-
-
-	while (fgets(line, len, file) != NULL)
+	while (read_line > 0)
 	{
-		nread = strlen(line);
-		line_number++;
-		if (nread > 0 && line[nread - 1] == '\n')
+		content = NULL;
+		read_line = getline(&content, &size, file);
+		bus.content = content;
+		counter++;
+		if (read_line > 0)
 		{
-			line[nread - 1] = '\0';
+			execute(content, &stack, counter, file);
 		}
-		process_line(&stack, line, instructions);
+		free(content);
 	}
-	free(line);
+	free_stack(stack);
 	fclose(file);
-
-	free_stack(&stack);
-
-	return (EXIT_SUCCESS);
-}
-void process_line(stack_t **stack, const char *line, instruction_t instructions[])
-{
-	int i;
-	char *opcode = strtok((char *)line, " ");
-	if (opcode != NULL)
-	{
-		int found = 0;
-
-		for (i = 0; instructions[i].opcode != NULL; i++)
-		{
-			if (strcmp(opcode, instructions[i].opcode) == 0)
-			{
-				instructions[i].f(stack, 0);
-				found = 1;
-				break;
-			}
-		}
-		if (!found)
-		{
-			fprintf(stderr, "Unknown opcode: %s\n", opcode);
-		}
-	}
-}
-
-void free_stack(stack_t **stack)
-{
-	if (*stack != NULL)
-	{
-		stack_t *temp = *stack;
-		*stack = (*stack)->next;
-		free(temp);
-	}
+return (0);
 }
